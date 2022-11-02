@@ -2,10 +2,8 @@ package com.haixiaolu.stream;
 
 import lombok.val;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -138,6 +136,80 @@ public class StreamDemo {
                 .distinct()
                 .count();
         System.out.println(count1);
+
+        // 分别获取这些作家的所出书籍的最高分和最低分的并打印
+        // Stream<Author> -> Stream<Book> -> Stream<Integer>
+        Optional<Integer> max = authors.stream()
+                .flatMap(author -> author.getBooks().stream())
+                .map(book -> book.getScore())
+                .max((o1, o2) -> o1 - o2);
+        System.out.println(max.get());
+
+        Optional<Integer> min = authors.stream()
+                .flatMap(author -> author.getBooks().stream())
+                .map(book -> book.getScore())
+                .min((o1, o2) -> o1 - o2);
+        System.out.println(min.get());
+
+        // 获取一个存放所有作者名字的List集合
+        List<String> list = authors.stream()
+                .map(author -> author.getName())
+                .collect(Collectors.toList());
+
+        System.out.println(list);
+
+        // 获取一个所有书名的Set集合
+        Set<Book> books = authors.stream()
+                .flatMap(author -> author.getBooks().stream())
+                .collect(Collectors.toSet());
+        System.out.println(books);
+
+        // 获取一个Map集合， map的key为作者名， value是List<Book>
+//        Map<String, List<Book>> listMap = authors.stream()
+//                .distinct()
+//                .collect(Collectors.toMap(author -> author.getName(), author -> author.getBooks()));
+
+//        判断是否有年龄在29岁以上的作家
+        boolean match = authors.stream()
+                .anyMatch(author -> author.getAge() > 29);
+        System.out.println(match);
+
+        // 判断是否所有作家都是成年人
+        boolean b = authors.stream()
+                .allMatch(author -> author.getAge() >= 18);
+        System.out.println(b);
+
+        // 判断作家是否都没有超过100岁的
+        boolean b1 = authors.stream().noneMatch(author -> author.getAge() > 100);
+        System.out.println(b1);
+
+        // 获取任意一个年龄大于18的作家， 如果存在就输出他的名字
+        Optional<Author> optionalAuthor = authors.stream()
+                .filter(author -> author.getAge() > 18)
+                .findAny();
+        optionalAuthor.ifPresent(author -> System.out.println(author.getName()));
+
+        // *获取一个年龄最小的作家， 并输出他的名字*
+        Optional<Author> first = authors.stream()
+                .sorted((o1, o2) -> o1.getAge() - o1.getAge())
+                .findFirst();
+        first.ifPresent(author -> System.out.println(author.getName()));
+
+        // reduce: *使用reduce求所有作者年龄的和*
+        Integer sum = authors.stream()
+                .map(author -> author.getAge()) // 把流转换成integer
+                .reduce(0, (result, element) -> result + element);
+        System.out.println(sum);
+
+        // 使用reduce求所有作者中年龄的最大值
+        authors.stream()
+                .map(author -> author.getAge()) // 把流转换成integer
+                .reduce(Integer.MIN_VALUE, (result, element) -> result < element ? element : result);
+
+        // 使用reduce求所有作者中年龄的最小值
+        authors.stream()
+                .map(author -> author.getAge()) // 把流转换成integer
+                .reduce(Integer.MAX_VALUE, (result, element) -> result > element ? element : result);
     }
 
     private static List<Author> getAuthors(){
